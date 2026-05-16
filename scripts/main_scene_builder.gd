@@ -521,7 +521,7 @@ func _build_ui() -> void:
 		hp_label.text = hp_text
 
 		if em and em.has_active_engagement():
-			var eng := em.get_active_engagement()
+			var eng = em.get_active_engagement()
 			eng_label.text = "ENGAGEMENT: %s vs %s (%.1fs)" % [eng.member.name, eng.enemy.name, em.engagement_timer]
 		else:
 			eng_label.text = ""
