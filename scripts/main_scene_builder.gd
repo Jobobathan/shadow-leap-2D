@@ -176,21 +176,22 @@ func _create_big_demon(demon_name: String, pos: Vector2) -> CharacterBody2D:
 
 	var col := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
-	shape.radius = 24.0
+	shape.radius = 36.0
 	col.shape = shape
 	demon.add_child(col)
 
 	var nav_agent := NavigationAgent2D.new()
 	nav_agent.name = "NavigationAgent2D"
-	nav_agent.path_desired_distance = 12.0
-	nav_agent.target_desired_distance = 12.0
+	nav_agent.path_desired_distance = 16.0
+	nav_agent.target_desired_distance = 16.0
 	demon.add_child(nav_agent)
 
-	# Boss: proper big_demon_sheet.png at 2.5x scale
+	# Boss: big_demon_sheet.png — sprite is small in 64×64 cells (~22% fill)
+	# Scale 4x so the demon reads as imposing (was 2.5x = too tiny for boss)
 	var sprite := AnimatedSprite2D.new()
 	sprite.name = "AnimatedSprite2D"
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale = Vector2(2.5, 2.5)
+	sprite.scale = Vector2(4.0, 4.0)
 	sprite.sprite_frames = _build_big_demon_sprite_frames()
 	demon.add_child(sprite)
 
@@ -223,21 +224,23 @@ func _build_environment() -> void:
 	# Play area: party ~(500,400), boss ~(700,150), combat ~(350-900, 100-700)
 	# Houses at corners, cover in between
 
-	# House 1 — Small gray stone, SW corner
+	# House 1 — Small brick red, SW corner
+	# Tints lightened (0.9+) so wall/window/door tile colors show through
+	# CanvasModulate already provides Veil atmosphere (×0.55-0.75)
 	_create_building("House1", Vector2(180, 640),
-		bld1_tex, ENV_SCALE, Color(0.6, 0.65, 0.8), light_tex, 1)
+		bld1_tex, ENV_SCALE, Color(0.95, 0.90, 0.90), light_tex, 1)
 
-	# House 2 — Small cream/tan, NW corner
+	# House 2 — Medium wood blue, NW corner
 	_create_building("House2", Vector2(180, 120),
-		bld2_tex, ENV_SCALE, Color(0.7, 0.75, 0.85), light_tex, 1)
+		bld2_tex, ENV_SCALE, Color(0.88, 0.92, 0.98), light_tex, 1)
 
-	# House 3 — Large tan, NE corner
+	# House 3 — Large brick white, NE corner
 	_create_building("House3", Vector2(1020, 120),
-		bld3_tex, ENV_SCALE, Color(0.5, 0.55, 0.65), light_tex, 2)
+		bld3_tex, ENV_SCALE, Color(0.95, 0.93, 0.88), light_tex, 2)
 
-	# House 4 — Large dark, SE corner
+	# House 4 — Large wood green, SE corner
 	_create_building("House4", Vector2(1020, 640),
-		bld4_tex, ENV_SCALE, Color(0.55, 0.7, 0.6), light_tex, 2)
+		bld4_tex, ENV_SCALE, Color(0.85, 0.95, 0.85), light_tex, 2)
 
 	# ─── 3 Cover Objects (tactical gameplay) ────────────────
 
@@ -287,14 +290,14 @@ func _build_environment() -> void:
 			dog.flip_h = true  # Face each other
 
 	# ─── Trees (conifers at perimeter) ──────────────────────
-	var large_tree := Rect2(896, 0, 128, 192)
-	var small_tree := Rect2(256, 0, 64, 128)
+	# Tree atlas regions — verified from conifers.png content scan
+	# Old large_tree Rect(896,0) was EMPTY (no content past x=768)
 	var tree_data := [
-		{"pos": Vector2(60, 60), "rect": large_tree},
-		{"pos": Vector2(60, 700), "rect": large_tree},
-		{"pos": Vector2(1140, 60), "rect": large_tree},
-		{"pos": Vector2(1140, 700), "rect": small_tree},
-		{"pos": Vector2(600, -20), "rect": small_tree},
+		{"pos": Vector2(60, 60), "rect": Rect2(0, 0, 128, 192)},      # NW: dense conifer (72%)
+		{"pos": Vector2(60, 700), "rect": Rect2(320, 0, 128, 192)},    # SW: variant conifer (48%)
+		{"pos": Vector2(1140, 60), "rect": Rect2(640, 0, 128, 192)},   # NE: another variant (47%)
+		{"pos": Vector2(1140, 700), "rect": Rect2(480, 0, 64, 128)},   # SE: small conifer (55%)
+		{"pos": Vector2(600, -200), "rect": Rect2(320, 0, 64, 128)},   # N: moved clear of boss
 	]
 	for i in range(tree_data.size()):
 		_place_sprite("Tree_%d" % i, tree_data[i]["pos"],
@@ -481,10 +484,10 @@ func _get_nav_obstacle_rects(margin: float) -> Array:
 	var rects: Array = []
 	# Buildings: collision = (visual_w, visual_h*0.6), offset (0, visual_h*0.2)
 	var buildings := [
-		{"pos": Vector2(180, 640), "tw": 96, "th": 224, "s": 1.5},
-		{"pos": Vector2(180, 120), "tw": 128, "th": 224, "s": 1.5},
-		{"pos": Vector2(1020, 120), "tw": 160, "th": 224, "s": 1.5},
-		{"pos": Vector2(1020, 640), "tw": 160, "th": 256, "s": 1.5},
+		{"pos": Vector2(180, 640), "tw": 96, "th": 256, "s": 1.5},   # Building 1: v3 (was 224)
+		{"pos": Vector2(180, 120), "tw": 128, "th": 256, "s": 1.5},  # Building 2: v3 (was 224)
+		{"pos": Vector2(1020, 120), "tw": 160, "th": 256, "s": 1.5}, # Building 3: v3 (was 224)
+		{"pos": Vector2(1020, 640), "tw": 160, "th": 288, "s": 1.5}, # Building 4: v3 (was 256)
 	]
 	for b in buildings:
 		var vw: float = b["tw"] * b["s"]
