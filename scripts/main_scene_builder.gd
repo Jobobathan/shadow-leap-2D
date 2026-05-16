@@ -1,5 +1,7 @@
+@tool
 extends Node2D
 ## Builds the full 2D prototype scene from code.
+## @tool allows the scene to render in the editor for visual tweaking.
 ## Uses proper character sprites (kage_lpc, akari_lpc, skeleton_topdown, big_demon_sheet).
 ## Feature parity with 3D prototype: turn system, engagement zones,
 ## ARPG combat, ranged, boss AI, camera zoom, party management.
@@ -8,17 +10,27 @@ extends Node2D
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color(0.08, 0.06, 0.1))
 
+	# In editor mode, clear children on re-run to avoid duplicates
+	if Engine.is_editor_hint():
+		for child in get_children():
+			child.queue_free()
+		# Wait a frame for queue_free to process
+		await get_tree().process_frame
+
 	_build_ground()
-	_build_managers()
-	_build_cursor()
 	_build_environment()
 	_build_navigation()
 	_build_atmosphere()
-	_build_party()
-	_build_enemies()
-	_build_camera()
-	_build_ui()
-	_build_party_manager()
+
+	# Skip gameplay elements in editor — only build visuals
+	if not Engine.is_editor_hint():
+		_build_managers()
+		_build_cursor()
+		_build_party()
+		_build_enemies()
+		_build_camera()
+		_build_ui()
+		_build_party_manager()
 
 
 ## ─── Ground ───────────────────────────────────────────────
