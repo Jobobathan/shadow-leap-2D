@@ -432,6 +432,8 @@ func _make_light_texture() -> Texture2D:
 
 
 ## ─── Navigation (Pathfinding) ─────────────────────────────
+## Grid-based nav mesh: divide play area into cells, exclude cells that
+## overlap obstacle collision rects. Reliable, no Godot bake API quirks.
 
 func _build_navigation() -> void:
 	var nav_region := NavigationRegion2D.new()
@@ -439,32 +441,75 @@ func _build_navigation() -> void:
 	add_child(nav_region)
 
 	var nav_poly := NavigationPolygon.new()
+	var CELL := 50.0
+	var NAV_MARGIN := 20.0  # Extra clearance around obstacles
+	var bounds := Rect2(-200, -250, 1600, 1150)
 
-	# Define walkable area as a set of polygons around obstacles
-	# Using direct vertex + polygon approach instead of deprecated outlines
-	var walkable_verts := PackedVector2Array()
-	var walkable_indices := PackedInt32Array()
+	var obstacles := _get_nav_obstacle_rects(NAV_MARGIN)
 
-	# Simple approach: define outer boundary vertices
-	var bounds := Rect2(-200, -250, 1600, 1150)  # Full play area
+	# Build vertex grid: (cols+1) x (rows+1) vertices
+	var cols := int(bounds.size.x / CELL)
+	var rows := int(bounds.size.y / CELL)
+	var verts := PackedVector2Array()
+	for r in range(rows + 1):
+		for c in range(cols + 1):
+			verts.append(bounds.position + Vector2(c * CELL, r * CELL))
+	nav_poly.vertices = verts
 
-	# Add outer quad (2 triangles)
-	walkable_verts.append(Vector2(bounds.position.x, bounds.position.y))  # 0: top-left
-	walkable_verts.append(Vector2(bounds.end.x, bounds.position.y))       # 1: top-right
-	walkable_verts.append(Vector2(bounds.end.x, bounds.end.y))            # 2: bottom-right
-	walkable_verts.append(Vector2(bounds.position.x, bounds.end.y))       # 3: bottom-left
-
-	nav_poly.vertices = walkable_verts
-	nav_poly.add_polygon(PackedInt32Array([0, 1, 2]))
-	nav_poly.add_polygon(PackedInt32Array([0, 2, 3]))
+	# Add quad polygons for non-blocked cells
+	var vert_cols := cols + 1
+	var poly_count := 0
+	for r in range(rows):
+		for c in range(cols):
+			var cell_tl := bounds.position + Vector2(c * CELL, r * CELL)
+			var cell_rect := Rect2(cell_tl, Vector2(CELL, CELL))
+			if _cell_hits_obstacle(cell_rect, obstacles):
+				continue
+			var i_tl := r * vert_cols + c
+			var i_tr := r * vert_cols + c + 1
+			var i_br := (r + 1) * vert_cols + c + 1
+			var i_bl := (r + 1) * vert_cols + c
+			nav_poly.add_polygon(PackedInt32Array([i_tl, i_tr, i_br, i_bl]))
+			poly_count += 1
 
 	nav_region.navigation_polygon = nav_poly
-	print("[Navigation] Nav mesh created: %d verts, %d polygons" % [nav_poly.vertices.size(), nav_poly.get_polygon_count()])
+	print("[Navigation] Grid nav mesh: %d verts, %d walkable cells (%d blocked)" % [
+		verts.size(), poly_count, (rows * cols) - poly_count])
 
 
-func _add_nav_obstacle(nav_poly: NavigationPolygon, center: Vector2, size: Vector2, margin: float) -> void:
-	# Placeholder for future obstacle support
-	pass
+func _get_nav_obstacle_rects(margin: float) -> Array:
+	var rects: Array = []
+	# Buildings: collision = (visual_w, visual_h*0.6), offset (0, visual_h*0.2)
+	var buildings := [
+		{"pos": Vector2(180, 640), "tw": 96, "th": 224, "s": 1.5},
+		{"pos": Vector2(180, 120), "tw": 128, "th": 224, "s": 1.5},
+		{"pos": Vector2(1020, 120), "tw": 160, "th": 224, "s": 1.5},
+		{"pos": Vector2(1020, 640), "tw": 160, "th": 256, "s": 1.5},
+	]
+	for b in buildings:
+		var vw: float = b["tw"] * b["s"]
+		var vh: float = b["th"] * b["s"]
+		var center := Vector2(b["pos"]) + Vector2(0, vh * 0.2)
+		var half := Vector2(vw / 2.0 + margin, vh * 0.3 + margin)
+		rects.append(Rect2(center - half, half * 2.0))
+	# Cover objects: collision centered at position
+	var covers := [
+		{"pos": Vector2(350, 450), "sz": Vector2(120, 90)},
+		{"pos": Vector2(850, 350), "sz": Vector2(50, 75)},
+		{"pos": Vector2(450, 180), "sz": Vector2(90, 60)},
+	]
+	for c in covers:
+		var half := Vector2(c["sz"]) / 2.0 + Vector2(margin, margin)
+		var pos := Vector2(c["pos"])
+		rects.append(Rect2(pos - half, half * 2.0))
+	return rects
+
+
+func _cell_hits_obstacle(cell: Rect2, obstacles: Array) -> bool:
+	for obs in obstacles:
+		if cell.intersects(obs as Rect2):
+			return true
+	return false
 
 
 ## ─── Atmosphere (Veil Overlay) ────────────────────────────
