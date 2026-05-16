@@ -86,12 +86,12 @@ func _build_party() -> void:
 	# Tune these scales until characters look the same height in-game.
 	# Party spawns well south of fountain/foodogs, clear of all props
 	var kage := _create_party_member("Kage", Vector2(550, 580), false,
-		_build_kage_sprite_frames(), Vector2(1.15, 1.15))
+		_build_kage_sprite_frames(), Vector2(1.02, 1.02))
 	add_child(kage)
 
 	# Akari — ranged party member (64px LPC composite sprite)
 	var akari := _create_party_member("Akari", Vector2(650, 620), true,
-		_build_akari_sprite_frames(), Vector2(1.85, 1.85))
+		_build_akari_sprite_frames(), Vector2(2.03, 2.03))
 	add_child(akari)
 
 
