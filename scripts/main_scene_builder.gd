@@ -193,9 +193,11 @@ func _build_environment() -> void:
 	var ENV_SCALE := Vector2(1.5, 1.5)
 	var light_tex := _make_light_texture()
 
-	# Load textures
-	var colonial_tex := load("res://sprites/colonial.png") as Texture2D
-	var windows_tex := load("res://sprites/victorian_windows_doors.png") as Texture2D
+	# Pre-composed building textures (walls + windows + roofs baked in)
+	var bld1_tex := load("res://sprites/building_1.png") as Texture2D
+	var bld2_tex := load("res://sprites/building_2.png") as Texture2D
+	var bld3_tex := load("res://sprites/building_3.png") as Texture2D
+	var bld4_tex := load("res://sprites/building_4.png") as Texture2D
 	var rocks_tex := load("res://sprites/rocks.png") as Texture2D
 	var barrels_tex := load("res://sprites/barrels.png") as Texture2D
 	var fountain_tex := load("res://sprites/fountain_large.png") as Texture2D
@@ -208,29 +210,21 @@ func _build_environment() -> void:
 	# Play area: party ~(500,400), boss ~(700,150), combat ~(350-900, 100-700)
 	# Houses at corners, cover in between
 
-	# House 1 — Small, SW — pushed further into corner
+	# House 1 — Small gray stone, SW corner
 	_create_building("House1", Vector2(180, 640),
-		colonial_tex, Rect2(0, 192, 96, 192), ENV_SCALE,
-		Color(0.6, 0.65, 0.8), light_tex,
-		windows_tex, Rect2(64, 1024, 32, 64), 1)
+		bld1_tex, ENV_SCALE, Color(0.6, 0.65, 0.8), light_tex, 1)
 
-	# House 2 — Small, NW — pushed further into corner
+	# House 2 — Small cream/tan, NW corner
 	_create_building("House2", Vector2(180, 120),
-		colonial_tex, Rect2(512, 0, 96, 256), ENV_SCALE,
-		Color(0.7, 0.75, 0.85), light_tex,
-		windows_tex, Rect2(64, 1024, 32, 64), 1)
+		bld2_tex, ENV_SCALE, Color(0.7, 0.75, 0.85), light_tex, 1)
 
-	# House 3 — Large, NE — pushed further into corner
+	# House 3 — Large tan, NE corner
 	_create_building("House3", Vector2(1020, 120),
-		colonial_tex, Rect2(704, 256, 192, 256), ENV_SCALE,
-		Color(0.5, 0.55, 0.65), light_tex,
-		windows_tex, Rect2(192, 1024, 32, 64), 2)
+		bld3_tex, ENV_SCALE, Color(0.5, 0.55, 0.65), light_tex, 2)
 
-	# House 4 — Large, SE — pushed further into corner
+	# House 4 — Large dark, SE corner
 	_create_building("House4", Vector2(1020, 640),
-		colonial_tex, Rect2(896, 0, 128, 320), ENV_SCALE,
-		Color(0.55, 0.7, 0.6), light_tex,
-		windows_tex, Rect2(320, 1024, 32, 64), 2)
+		bld4_tex, ENV_SCALE, Color(0.55, 0.7, 0.6), light_tex, 2)
 
 	# ─── 3 Cover Objects (tactical gameplay) ────────────────
 
@@ -310,17 +304,16 @@ func _build_environment() -> void:
 ## ─── Building Factory ─────────────────────────────────────
 
 func _create_building(bld_name: String, pos: Vector2,
-		wall_tex: Texture2D, wall_region: Rect2, bld_scale: Vector2,
-		tint: Color, light_tex: Texture2D,
-		win_tex: Texture2D, win_region: Rect2, win_count: int) -> void:
+		tex: Texture2D, bld_scale: Vector2,
+		tint: Color, light_tex: Texture2D, win_count: int) -> void:
 	var building := StaticBody2D.new()
 	building.name = bld_name
 	building.position = pos
 	add_child(building)
 
-	# Wall sprite
+	# Building sprite (pre-composed: walls + windows + roof)
 	var wall := Sprite2D.new()
-	wall.texture = _atlas_tex(wall_tex, wall_region)
+	wall.texture = tex
 	wall.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	wall.scale = bld_scale
 	wall.modulate = tint
@@ -328,8 +321,8 @@ func _create_building(bld_name: String, pos: Vector2,
 	building.add_child(wall)
 
 	# Collision — lower 60% of building (roof overhangs above)
-	var visual_w := wall_region.size.x * bld_scale.x
-	var visual_h := wall_region.size.y * bld_scale.y
+	var visual_w := tex.get_width() * bld_scale.x
+	var visual_h := tex.get_height() * bld_scale.y
 	var col := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(visual_w, visual_h * 0.6)
@@ -337,21 +330,11 @@ func _create_building(bld_name: String, pos: Vector2,
 	col.position = Vector2(0, visual_h * 0.2)
 	building.add_child(col)
 
-	# Lit window overlays + warm glow lights
+	# Warm glow lights for lit windows (baked into texture)
 	for w in range(win_count):
 		var x_off := (w - (win_count - 1) / 2.0) * 50.0
-		var win_pos := Vector2(x_off, -visual_h * 0.15)
-
-		var win := Sprite2D.new()
-		win.texture = _atlas_tex(win_tex, win_region)
-		win.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		win.scale = bld_scale
-		win.position = win_pos
-		win.z_index = -1
-		building.add_child(win)
-
 		var light := PointLight2D.new()
-		light.position = win_pos
+		light.position = Vector2(x_off, visual_h * 0.1)
 		light.color = Color(1.0, 0.69, 0.38)  # Warm orange (#FFB060)
 		light.energy = 0.5
 		light.texture = light_tex
