@@ -73,7 +73,7 @@ func _build_cursor() -> void:
 	var cursor := Node2D.new()
 	cursor.name = "TacticalCursor"
 	cursor.set_script(load("res://scripts/tactical_cursor_2d.gd"))
-	cursor.position = Vector2(500, 400)
+	cursor.position = Vector2(550, 480)
 	add_child(cursor)
 
 
@@ -81,12 +81,12 @@ func _build_cursor() -> void:
 
 func _build_party() -> void:
 	# Kage — melee party member (128px LPC composite sprite)
-	var kage := _create_party_member("Kage", Vector2(500, 400), false,
+	var kage := _create_party_member("Kage", Vector2(550, 480), false,
 		_build_kage_sprite_frames(), Vector2(1.0, 1.0))
 	add_child(kage)
 
 	# Akari — ranged party member (64px LPC composite sprite)
-	var akari := _create_party_member("Akari", Vector2(400, 500), true,
+	var akari := _create_party_member("Akari", Vector2(650, 520), true,
 		_build_akari_sprite_frames(), Vector2(2.0, 2.0))
 	add_child(akari)
 
@@ -123,16 +123,16 @@ func _build_enemies() -> void:
 	var skeleton_frames := _build_skeleton_sprite_frames()
 
 	var demon_positions := [
-		Vector2(900, 300),
-		Vector2(400, 700),
-		Vector2(800, 600),
+		Vector2(600, 50),     # N center, above buildings
+		Vector2(150, 380),    # W edge, outside town
+		Vector2(1100, 380),   # E edge, outside town
 	]
 	for i in range(demon_positions.size()):
 		var demon := _create_small_demon("SmallDemon_%d" % i, demon_positions[i], skeleton_frames)
 		add_child(demon)
 
 	# Big demon (boss) — proper big_demon_sheet sprite
-	var boss := _create_big_demon("BigDemon", Vector2(700, 150))
+	var boss := _create_big_demon("BigDemon", Vector2(600, -100))
 	add_child(boss)
 
 
@@ -464,7 +464,7 @@ func _build_camera() -> void:
 	var cam := Camera2D.new()
 	cam.name = "Camera2D"
 	cam.set_script(load("res://scripts/camera_follow_2d.gd"))
-	cam.position = Vector2(500, 400)
+	cam.position = Vector2(550, 480)
 	add_child(cam)
 
 
