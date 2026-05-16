@@ -73,7 +73,7 @@ func _build_cursor() -> void:
 	var cursor := Node2D.new()
 	cursor.name = "TacticalCursor"
 	cursor.set_script(load("res://scripts/tactical_cursor_2d.gd"))
-	cursor.position = Vector2(550, 480)
+	cursor.position = Vector2(550, 580)
 	add_child(cursor)
 
 
@@ -83,12 +83,13 @@ func _build_party() -> void:
 	# Kage — melee party member (128px LPC composite sprite)
 	# NOTE: Kage=128px cells, Akari=64px cells. Different fill ratios.
 	# Tune these scales until characters look the same height in-game.
-	var kage := _create_party_member("Kage", Vector2(550, 480), false,
+	# Party spawns well south of fountain/foodogs, clear of all props
+	var kage := _create_party_member("Kage", Vector2(550, 580), false,
 		_build_kage_sprite_frames(), Vector2(1.15, 1.15))
 	add_child(kage)
 
 	# Akari — ranged party member (64px LPC composite sprite)
-	var akari := _create_party_member("Akari", Vector2(650, 520), true,
+	var akari := _create_party_member("Akari", Vector2(650, 620), true,
 		_build_akari_sprite_frames(), Vector2(1.85, 1.85))
 	add_child(akari)
 
@@ -125,8 +126,8 @@ func _build_enemies() -> void:
 	var skeleton_frames := _build_skeleton_sprite_frames()
 
 	var demon_positions := [
-		Vector2(600, 50),     # N center, above buildings
-		Vector2(150, 380),    # W edge, outside town
+		Vector2(600, 80),     # N center, above buildings
+		Vector2(100, 380),    # W edge, outside town
 		Vector2(1100, 380),   # E edge, outside town
 	]
 	for i in range(demon_positions.size()):
@@ -134,7 +135,7 @@ func _build_enemies() -> void:
 		add_child(demon)
 
 	# Big demon (boss) — proper big_demon_sheet sprite
-	var boss := _create_big_demon("BigDemon", Vector2(600, -100))
+	var boss := _create_big_demon("BigDemon", Vector2(600, -80))
 	add_child(boss)
 
 
@@ -188,7 +189,8 @@ func _create_big_demon(demon_name: String, pos: Vector2) -> CharacterBody2D:
 ## All env sprites at 2x scale to match LPC character scale (64px chars at 2.0x = 128px)
 
 func _build_environment() -> void:
-	var ENV_SCALE := Vector2(2.0, 2.0)
+	# Buildings at 1.5x (was 2.0x — buildings dwarfed characters)
+	var ENV_SCALE := Vector2(1.5, 1.5)
 	var light_tex := _make_light_texture()
 
 	# Load textures
@@ -206,56 +208,58 @@ func _build_environment() -> void:
 	# Play area: party ~(500,400), boss ~(700,150), combat ~(350-900, 100-700)
 	# Houses at corners, cover in between
 
-	# House 1 — Small, SW (cream stone facade, heavy Veil tint)
-	_create_building("House1", Vector2(280, 590),
+	# House 1 — Small, SW — pushed further into corner
+	_create_building("House1", Vector2(180, 640),
 		colonial_tex, Rect2(0, 192, 96, 192), ENV_SCALE,
 		Color(0.6, 0.65, 0.8), light_tex,
 		windows_tex, Rect2(64, 1024, 32, 64), 1)
 
-	# House 2 — Small, NW (blue siding + chevron roof)
-	_create_building("House2", Vector2(280, 170),
+	# House 2 — Small, NW — pushed further into corner
+	_create_building("House2", Vector2(180, 120),
 		colonial_tex, Rect2(512, 0, 96, 256), ENV_SCALE,
 		Color(0.7, 0.75, 0.85), light_tex,
 		windows_tex, Rect2(64, 1024, 32, 64), 1)
 
-	# House 3 — Large, NE (wide yellow facade, darkest Veil tint)
-	_create_building("House3", Vector2(920, 170),
+	# House 3 — Large, NE — pushed further into corner
+	_create_building("House3", Vector2(1020, 120),
 		colonial_tex, Rect2(704, 256, 192, 256), ENV_SCALE,
 		Color(0.5, 0.55, 0.65), light_tex,
 		windows_tex, Rect2(192, 1024, 32, 64), 2)
 
-	# House 4 — Large, SE (green composite, old building feel)
-	_create_building("House4", Vector2(920, 590),
+	# House 4 — Large, SE — pushed further into corner
+	_create_building("House4", Vector2(1020, 640),
 		colonial_tex, Rect2(896, 0, 128, 320), ENV_SCALE,
 		Color(0.55, 0.7, 0.6), light_tex,
 		windows_tex, Rect2(320, 1024, 32, 64), 2)
 
 	# ─── 3 Cover Objects (tactical gameplay) ────────────────
 
-	# Large gray boulder — center-west
-	_create_cover("Cover_Rock1", Vector2(420, 490),
+	# Large gray boulder — west side of play area
+	_create_cover("Cover_Rock1", Vector2(350, 450),
 		rocks_tex, Rect2(384, 0, 128, 128), ENV_SCALE,
-		Vector2(160, 120))
+		Vector2(120, 90))
 
-	# Wooden barrel stack — center-east
-	_create_cover("Cover_Barrel", Vector2(780, 300),
-		barrels_tex, Rect2(0, 0, 32, 64), Vector2(3.0, 3.0),
-		Vector2(60, 90))
+	# Wooden barrel stack — east side of play area
+	_create_cover("Cover_Barrel", Vector2(850, 350),
+		barrels_tex, Rect2(0, 0, 32, 64), Vector2(2.5, 2.5),
+		Vector2(50, 75))
 
-	# Small boulder cluster — north-center
-	_create_cover("Cover_Rock2", Vector2(500, 120),
+	# Small boulder cluster — north of fountain
+	_create_cover("Cover_Rock2", Vector2(450, 180),
 		rocks_tex, Rect2(0, 0, 96, 96), ENV_SCALE,
-		Vector2(120, 80))
+		Vector2(90, 60))
 
 	# ─── Town Center (fountain + foodog guardians) ──────────
-	var town_center := Vector2(600, 380)
+	# Fountain at true center of play area, well clear of party spawn
+	var town_center := Vector2(600, 330)
+	var PROP_SCALE := Vector2(1.5, 1.5)  # Props match building scale
 
 	# Fountain shadow
 	_place_sprite("FountainShadow", town_center + Vector2(4, 6),
-		fountain_shadow_tex, Rect2(0, 0, 64, 64), ENV_SCALE, Color.WHITE, -2)
+		fountain_shadow_tex, Rect2(0, 0, 64, 64), PROP_SCALE, Color.WHITE, -2)
 	# Fountain
 	_place_sprite("Fountain", town_center,
-		fountain_tex, Rect2(0, 0, 64, 64), ENV_SCALE, Color.WHITE, 0)
+		fountain_tex, Rect2(0, 0, 64, 64), PROP_SCALE, Color.WHITE, 0)
 	# Fountain glow
 	var f_light := PointLight2D.new()
 	f_light.position = town_center
@@ -265,13 +269,13 @@ func _build_environment() -> void:
 	f_light.texture_scale = 3.0
 	add_child(f_light)
 
-	# Foodog guardians — flanking south of fountain
+	# Foodog guardians — flanking east/west of fountain, wide apart
 	for side in [-1, 1]:
-		var dog_pos := town_center + Vector2(side * 100, 120)
+		var dog_pos := town_center + Vector2(side * 160, 10)
 		_place_sprite("FoodogShadow%d" % [side], dog_pos + Vector2(3, 4),
-			foodog_shadow_tex, Rect2(0, 0, 64, 96), ENV_SCALE, Color.WHITE, -2)
+			foodog_shadow_tex, Rect2(0, 0, 64, 96), PROP_SCALE, Color.WHITE, -2)
 		var dog := _place_sprite("Foodog%d" % [side], dog_pos,
-			foodog_tex, Rect2(0, 0, 64, 96), ENV_SCALE, Color.WHITE, 0)
+			foodog_tex, Rect2(0, 0, 64, 96), PROP_SCALE, Color.WHITE, 0)
 		if side == 1:
 			dog.flip_h = true  # Face each other
 
@@ -279,11 +283,11 @@ func _build_environment() -> void:
 	var large_tree := Rect2(896, 0, 128, 192)
 	var small_tree := Rect2(256, 0, 64, 128)
 	var tree_data := [
-		{"pos": Vector2(130, 100), "rect": large_tree},
-		{"pos": Vector2(130, 660), "rect": large_tree},
-		{"pos": Vector2(1070, 100), "rect": large_tree},
-		{"pos": Vector2(1070, 660), "rect": small_tree},
-		{"pos": Vector2(600, 30), "rect": small_tree},
+		{"pos": Vector2(60, 60), "rect": large_tree},
+		{"pos": Vector2(60, 700), "rect": large_tree},
+		{"pos": Vector2(1140, 60), "rect": large_tree},
+		{"pos": Vector2(1140, 700), "rect": small_tree},
+		{"pos": Vector2(600, -20), "rect": small_tree},
 	]
 	for i in range(tree_data.size()):
 		_place_sprite("Tree_%d" % i, tree_data[i]["pos"],
@@ -295,8 +299,8 @@ func _build_environment() -> void:
 	var car := Sprite2D.new()
 	car.name = "ParkedCar"
 	car.texture = car_tex
-	car.position = Vector2(140, 400)
-	car.scale = Vector2(1.2, 1.2)
+	car.position = Vector2(70, 420)
+	car.scale = Vector2(1.0, 1.0)
 	car.modulate = Color(0.5, 0.55, 0.65, 0.7)  # Faded, Veil-dimmed
 	car.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	car.z_index = -3
@@ -466,7 +470,7 @@ func _build_camera() -> void:
 	var cam := Camera2D.new()
 	cam.name = "Camera2D"
 	cam.set_script(load("res://scripts/camera_follow_2d.gd"))
-	cam.position = Vector2(550, 480)
+	cam.position = Vector2(550, 550)
 	add_child(cam)
 
 
