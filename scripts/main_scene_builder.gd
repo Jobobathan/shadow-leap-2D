@@ -82,12 +82,12 @@ func _build_cursor() -> void:
 func _build_party() -> void:
 	# Kage — melee party member (128px LPC composite sprite)
 	var kage := _create_party_member("Kage", Vector2(550, 480), false,
-		_build_kage_sprite_frames(), Vector2(1.0, 1.0))
+		_build_kage_sprite_frames(), Vector2(1.1, 1.1))
 	add_child(kage)
 
 	# Akari — ranged party member (64px LPC composite sprite)
 	var akari := _create_party_member("Akari", Vector2(650, 520), true,
-		_build_akari_sprite_frames(), Vector2(2.0, 2.0))
+		_build_akari_sprite_frames(), Vector2(2.2, 2.2))
 	add_child(akari)
 
 

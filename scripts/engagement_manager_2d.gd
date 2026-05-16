@@ -167,9 +167,9 @@ func _resolve_current() -> void:
 	if combat_camera and combat_camera.has_method("zoom_to_macro"):
 		await combat_camera.zoom_to_macro(member.global_position)
 
-	if party_wins:
-		if enemy.has_method("retreat_from") and not enemy_dead:
-			enemy.retreat_from(member.global_position)
+	# Always retreat after engagement (prevents standing on top of party)
+	if enemy.has_method("retreat_from") and not enemy_dead:
+		enemy.retreat_from(member.global_position)
 
 	engagement_resolved.emit()
 	active_engagement = {}
