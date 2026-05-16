@@ -38,6 +38,7 @@ var hitstop_timer: float = 0.0
 
 ## Sprite
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var nav_agent: NavigationAgent2D = $NavigationAgent2D
 var facing_dir: int = 2
 var damage_tween: Tween = null
 var base_sprite_scale: Vector2 = Vector2(3.5, 3.5)
@@ -202,6 +203,15 @@ func _process_casting() -> void:
 
 ## ─── Melee States ─────────────────────────────────────────
 
+func _get_nav_direction_to(target_pos: Vector2) -> Vector2:
+	if nav_agent:
+		nav_agent.target_position = target_pos
+		if not nav_agent.is_navigation_finished():
+			var next_pos := nav_agent.get_next_path_position()
+			return (next_pos - global_position).normalized()
+	return (target_pos - global_position).normalized()
+
+
 func _enter_approaching() -> void:
 	state = State.APPROACHING
 	state_timer = 0.0
@@ -219,7 +229,7 @@ func _process_approaching(delta: float) -> void:
 		velocity = Vector2.ZERO
 		_enter_melee_telegraph()
 		return
-	var move_dir := direction.normalized()
+	var move_dir := _get_nav_direction_to(melee_target.global_position)
 	velocity = move_dir * approach_speed
 	_update_facing(move_dir)
 	state_timer -= delta

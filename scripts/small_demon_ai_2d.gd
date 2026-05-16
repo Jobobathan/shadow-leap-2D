@@ -72,6 +72,7 @@ var intended_move_dir: Vector2 = Vector2.ZERO
 
 ## Sprite
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var nav_agent: NavigationAgent2D = $NavigationAgent2D
 var facing_dir: int = 2
 var base_sprite_scale: Vector2 = Vector2(2.0, 2.0)
 
@@ -224,7 +225,7 @@ func _arpg_approach(direction: Vector2) -> void:
 		circle_direction = [-1.0, 1.0].pick_random()
 		velocity = Vector2.ZERO
 		return
-	var move_dir := direction.normalized()
+	var move_dir := _get_nav_direction_to(engagement_target.global_position)
 	velocity = move_dir * arpg_approach_speed
 	intended_move_dir = move_dir
 	_update_facing(move_dir)
@@ -375,6 +376,15 @@ func get_parried() -> void:
 
 ## ─── Reactive Aggro (player phase) ───────────────────────
 
+func _get_nav_direction_to(target_pos: Vector2) -> Vector2:
+	if nav_agent:
+		nav_agent.target_position = target_pos
+		if not nav_agent.is_navigation_finished():
+			var next_pos := nav_agent.get_next_path_position()
+			return (next_pos - global_position).normalized()
+	return (target_pos - global_position).normalized()
+
+
 func _process_reactive_aggro() -> void:
 	var nearest_in_aggro := _find_nearest_in_aggro()
 	if nearest_in_aggro:
@@ -383,8 +393,7 @@ func _process_reactive_aggro() -> void:
 		aggro_target = nearest_in_aggro
 		var distance := global_position.distance_to(aggro_target.global_position)
 		if distance > stop_distance:
-			var direction := aggro_target.global_position - global_position
-			var move_dir := direction.normalized()
+			var move_dir := _get_nav_direction_to(aggro_target.global_position)
 			velocity = move_dir * chase_speed
 			intended_move_dir = move_dir
 			_update_facing(move_dir)
@@ -411,8 +420,7 @@ func _process_enemy_turn() -> void:
 	if nearest:
 		var distance := global_position.distance_to(nearest.global_position)
 		if distance > stop_distance:
-			var direction := nearest.global_position - global_position
-			var move_dir := direction.normalized()
+			var move_dir := _get_nav_direction_to(nearest.global_position)
 			velocity = move_dir * chase_speed
 			intended_move_dir = move_dir
 			_update_facing(move_dir)
@@ -457,7 +465,7 @@ func _process_retreat() -> void:
 		if is_my_turn:
 			_end_turn()
 		return
-	var move_dir := direction.normalized()
+	var move_dir := _get_nav_direction_to(retreat_target)
 	velocity = move_dir * chase_speed * 1.5
 	intended_move_dir = move_dir
 	_update_facing(move_dir)

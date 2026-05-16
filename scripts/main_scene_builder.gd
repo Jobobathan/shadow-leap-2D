@@ -12,6 +12,7 @@ func _ready() -> void:
 	_build_managers()
 	_build_cursor()
 	_build_environment()
+	_build_navigation()
 	_build_atmosphere()
 	_build_party()
 	_build_enemies()
@@ -151,6 +152,12 @@ func _create_small_demon(demon_name: String, pos: Vector2, skeleton_frames: Spri
 	col.shape = shape
 	demon.add_child(col)
 
+	var nav_agent := NavigationAgent2D.new()
+	nav_agent.name = "NavigationAgent2D"
+	nav_agent.path_desired_distance = 8.0
+	nav_agent.target_desired_distance = 8.0
+	demon.add_child(nav_agent)
+
 	var sprite := AnimatedSprite2D.new()
 	sprite.name = "AnimatedSprite2D"
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -172,6 +179,12 @@ func _create_big_demon(demon_name: String, pos: Vector2) -> CharacterBody2D:
 	shape.radius = 24.0
 	col.shape = shape
 	demon.add_child(col)
+
+	var nav_agent := NavigationAgent2D.new()
+	nav_agent.name = "NavigationAgent2D"
+	nav_agent.path_desired_distance = 12.0
+	nav_agent.target_desired_distance = 12.0
+	demon.add_child(nav_agent)
 
 	# Boss: proper big_demon_sheet.png at 2.5x scale
 	var sprite := AnimatedSprite2D.new()
@@ -416,6 +429,42 @@ func _make_light_texture() -> Texture2D:
 	grad.width = 128
 	grad.height = 128
 	return grad
+
+
+## ─── Navigation (Pathfinding) ─────────────────────────────
+
+func _build_navigation() -> void:
+	var nav_region := NavigationRegion2D.new()
+	nav_region.name = "NavigationRegion"
+	add_child(nav_region)
+
+	var nav_poly := NavigationPolygon.new()
+
+	# Define walkable area as a set of polygons around obstacles
+	# Using direct vertex + polygon approach instead of deprecated outlines
+	var walkable_verts := PackedVector2Array()
+	var walkable_indices := PackedInt32Array()
+
+	# Simple approach: define outer boundary vertices
+	var bounds := Rect2(-200, -250, 1600, 1150)  # Full play area
+
+	# Add outer quad (2 triangles)
+	walkable_verts.append(Vector2(bounds.position.x, bounds.position.y))  # 0: top-left
+	walkable_verts.append(Vector2(bounds.end.x, bounds.position.y))       # 1: top-right
+	walkable_verts.append(Vector2(bounds.end.x, bounds.end.y))            # 2: bottom-right
+	walkable_verts.append(Vector2(bounds.position.x, bounds.end.y))       # 3: bottom-left
+
+	nav_poly.vertices = walkable_verts
+	nav_poly.add_polygon(PackedInt32Array([0, 1, 2]))
+	nav_poly.add_polygon(PackedInt32Array([0, 2, 3]))
+
+	nav_region.navigation_polygon = nav_poly
+	print("[Navigation] Nav mesh created: %d verts, %d polygons" % [nav_poly.vertices.size(), nav_poly.get_polygon_count()])
+
+
+func _add_nav_obstacle(nav_poly: NavigationPolygon, center: Vector2, size: Vector2, margin: float) -> void:
+	# Placeholder for future obstacle support
+	pass
 
 
 ## ─── Atmosphere (Veil Overlay) ────────────────────────────
