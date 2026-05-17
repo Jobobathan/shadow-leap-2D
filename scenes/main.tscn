@@ -1,7 +1,472 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=44 format=3]
 
-[ext_resource type="Script" path="res://scripts/main_scene_builder.gd" id="1_builder"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="main_script"]
+[ext_resource type="Script" path="res://scripts/grid_drawer.gd" id="grid_script"]
+[ext_resource type="Script" path="res://scripts/nav_builder.gd" id="nav_script"]
+[ext_resource type="Script" path="res://scripts/ui_updater.gd" id="ui_script"]
+[ext_resource type="Script" path="res://scripts/camera_follow_2d.gd" id="cam_script"]
+[ext_resource type="Script" path="res://scripts/turn_manager_2d.gd" id="tm_script"]
+[ext_resource type="Script" path="res://scripts/engagement_manager_2d.gd" id="em_script"]
+[ext_resource type="Script" path="res://scripts/tactical_cursor_2d.gd" id="tc_script"]
+[ext_resource type="Script" path="res://scripts/party_manager_2d.gd" id="pm_script"]
+[ext_resource type="Texture2D" path="res://sprites/ground_tile.png" id="ground_tex"]
+[ext_resource type="Texture2D" path="res://sprites/building_1.png" id="bld1"]
+[ext_resource type="Texture2D" path="res://sprites/building_2.png" id="bld2"]
+[ext_resource type="Texture2D" path="res://sprites/building_3.png" id="bld3"]
+[ext_resource type="Texture2D" path="res://sprites/building_4.png" id="bld4"]
+[ext_resource type="Texture2D" path="res://sprites/rocks.png" id="rocks"]
+[ext_resource type="Texture2D" path="res://sprites/barrels.png" id="barrels"]
+[ext_resource type="Texture2D" path="res://sprites/conifers.png" id="conifers"]
+[ext_resource type="Texture2D" path="res://sprites/fountain_large.png" id="fountain_tex"]
+[ext_resource type="Texture2D" path="res://sprites/fountain_large_shadow.png" id="fountain_sh_tex"]
+[ext_resource type="Texture2D" path="res://sprites/foodog.png" id="foodog_tex"]
+[ext_resource type="Texture2D" path="res://sprites/foodog_shadow.png" id="foodog_sh_tex"]
+[ext_resource type="Texture2D" path="res://sprites/car_parked.png" id="car_tex"]
+[ext_resource type="PackedScene" path="res://scenes/entities/kage.tscn" id="kage_scene"]
+[ext_resource type="PackedScene" path="res://scenes/entities/akari.tscn" id="akari_scene"]
+[ext_resource type="PackedScene" path="res://scenes/entities/small_demon.tscn" id="demon_scene"]
+[ext_resource type="PackedScene" path="res://scenes/entities/big_demon.tscn" id="boss_scene"]
+
+[sub_resource type="Gradient" id="Gradient_1"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="LightTex_1"]
+gradient = SubResource("Gradient_1")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+width = 128
+height = 128
+
+[sub_resource type="RectangleShape2D" id="BldShape_1"]
+size = Vector2(144.0, 230.39999999999998)
+
+[sub_resource type="RectangleShape2D" id="BldShape_2"]
+size = Vector2(192.0, 230.39999999999998)
+
+[sub_resource type="RectangleShape2D" id="BldShape_3"]
+size = Vector2(240.0, 230.39999999999998)
+
+[sub_resource type="RectangleShape2D" id="BldShape_4"]
+size = Vector2(240.0, 259.2)
+
+[sub_resource type="RectangleShape2D" id="CoverShape_1"]
+size = Vector2(120, 90)
+
+[sub_resource type="RectangleShape2D" id="CoverShape_2"]
+size = Vector2(50, 75)
+
+[sub_resource type="RectangleShape2D" id="CoverShape_3"]
+size = Vector2(90, 60)
+
+[sub_resource type="AtlasTexture" id="CoverAtlas_1"]
+atlas = ExtResource("rocks")
+region = Rect2(384, 0, 128, 128)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="CoverAtlas_2"]
+atlas = ExtResource("barrels")
+region = Rect2(0, 0, 32, 64)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="CoverAtlas_3"]
+atlas = ExtResource("rocks")
+region = Rect2(0, 0, 96, 96)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="TreeAtlas_1"]
+atlas = ExtResource("conifers")
+region = Rect2(0, 0, 128, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="TreeAtlas_2"]
+atlas = ExtResource("conifers")
+region = Rect2(320, 0, 128, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="TreeAtlas_3"]
+atlas = ExtResource("conifers")
+region = Rect2(640, 0, 128, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="TreeAtlas_4"]
+atlas = ExtResource("conifers")
+region = Rect2(480, 0, 64, 128)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="TreeAtlas_5"]
+atlas = ExtResource("conifers")
+region = Rect2(320, 0, 64, 128)
+filter_clip = true
 
 [node name="Main" type="Node2D"]
 y_sort_enabled = true
-script = ExtResource("1_builder")
+script = ExtResource("main_script")
+
+[node name="Ground" type="Sprite2D" parent="."]
+texture_repeat = 2
+z_index = -10
+position = Vector2(-1500, -1500)
+texture = ExtResource("ground_tex")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 3000, 3000)
+
+[node name="GridOverlay" type="Node2D" parent="."]
+z_index = -9
+script = ExtResource("grid_script")
+
+[node name="House1" type="StaticBody2D" parent="."]
+position = Vector2(180, 640)
+
+[node name="Sprite2D" type="Sprite2D" parent="House1"]
+texture = ExtResource("bld1")
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.95, 0.9, 0.9, 1)
+z_index = -2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="House1"]
+position = Vector2(0, 76.80000000000001)
+shape = SubResource("BldShape_1")
+
+[node name="WindowLight" type="PointLight2D" parent="House1"]
+position = Vector2(0.0, 38.400000000000006)
+color = Color(1, 0.69, 0.38, 1)
+energy = 0.5
+texture = SubResource("LightTex_1")
+texture_scale = 2.5
+
+[node name="Shadow" type="ColorRect" parent="House1"]
+offset_left = -80.0
+offset_top = 188.0
+offset_right = 80.0
+offset_bottom = 200.0
+z_index = -3
+color = Color(0, 0, 0, 0.25)
+
+[node name="House2" type="StaticBody2D" parent="."]
+position = Vector2(180, 120)
+
+[node name="Sprite2D" type="Sprite2D" parent="House2"]
+texture = ExtResource("bld2")
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.88, 0.92, 0.98, 1)
+z_index = -2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="House2"]
+position = Vector2(0, 76.80000000000001)
+shape = SubResource("BldShape_2")
+
+[node name="WindowLight" type="PointLight2D" parent="House2"]
+position = Vector2(0.0, 38.400000000000006)
+color = Color(1, 0.69, 0.38, 1)
+energy = 0.5
+texture = SubResource("LightTex_1")
+texture_scale = 2.5
+
+[node name="Shadow" type="ColorRect" parent="House2"]
+offset_left = -104.0
+offset_top = 188.0
+offset_right = 104.0
+offset_bottom = 200.0
+z_index = -3
+color = Color(0, 0, 0, 0.25)
+
+[node name="House3" type="StaticBody2D" parent="."]
+position = Vector2(1020, 120)
+
+[node name="Sprite2D" type="Sprite2D" parent="House3"]
+texture = ExtResource("bld3")
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.95, 0.93, 0.88, 1)
+z_index = -2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="House3"]
+position = Vector2(0, 76.80000000000001)
+shape = SubResource("BldShape_3")
+
+[node name="WindowLight_1" type="PointLight2D" parent="House3"]
+position = Vector2(-25.0, 38.400000000000006)
+color = Color(1, 0.69, 0.38, 1)
+energy = 0.5
+texture = SubResource("LightTex_1")
+texture_scale = 2.5
+
+[node name="WindowLight_2" type="PointLight2D" parent="House3"]
+position = Vector2(25.0, 38.400000000000006)
+color = Color(1, 0.69, 0.38, 1)
+energy = 0.5
+texture = SubResource("LightTex_1")
+texture_scale = 2.5
+
+[node name="Shadow" type="ColorRect" parent="House3"]
+offset_left = -128.0
+offset_top = 188.0
+offset_right = 128.0
+offset_bottom = 200.0
+z_index = -3
+color = Color(0, 0, 0, 0.25)
+
+[node name="House4" type="StaticBody2D" parent="."]
+position = Vector2(1020, 640)
+
+[node name="Sprite2D" type="Sprite2D" parent="House4"]
+texture = ExtResource("bld4")
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.85, 0.95, 0.85, 1)
+z_index = -2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="House4"]
+position = Vector2(0, 86.4)
+shape = SubResource("BldShape_4")
+
+[node name="WindowLight_1" type="PointLight2D" parent="House4"]
+position = Vector2(-25.0, 43.2)
+color = Color(1, 0.69, 0.38, 1)
+energy = 0.5
+texture = SubResource("LightTex_1")
+texture_scale = 2.5
+
+[node name="WindowLight_2" type="PointLight2D" parent="House4"]
+position = Vector2(25.0, 43.2)
+color = Color(1, 0.69, 0.38, 1)
+energy = 0.5
+texture = SubResource("LightTex_1")
+texture_scale = 2.5
+
+[node name="Shadow" type="ColorRect" parent="House4"]
+offset_left = -128.0
+offset_top = 212.0
+offset_right = 128.0
+offset_bottom = 224.0
+z_index = -3
+color = Color(0, 0, 0, 0.25)
+
+[node name="Cover_Rock1" type="StaticBody2D" parent="."]
+position = Vector2(350, 450)
+
+[node name="Sprite2D" type="Sprite2D" parent="Cover_Rock1"]
+texture = SubResource("CoverAtlas_1")
+scale = Vector2(1.5, 1.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cover_Rock1"]
+shape = SubResource("CoverShape_1")
+
+[node name="Shadow" type="ColorRect" parent="Cover_Rock1"]
+offset_left = -65.0
+offset_top = 43.0
+offset_right = 65.0
+offset_bottom = 51.0
+z_index = -1
+color = Color(0, 0, 0, 0.3)
+
+[node name="Cover_Barrel" type="StaticBody2D" parent="."]
+position = Vector2(850, 350)
+
+[node name="Sprite2D" type="Sprite2D" parent="Cover_Barrel"]
+texture = SubResource("CoverAtlas_2")
+scale = Vector2(2.5, 2.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cover_Barrel"]
+shape = SubResource("CoverShape_2")
+
+[node name="Shadow" type="ColorRect" parent="Cover_Barrel"]
+offset_left = -30.0
+offset_top = 35.5
+offset_right = 30.0
+offset_bottom = 43.5
+z_index = -1
+color = Color(0, 0, 0, 0.3)
+
+[node name="Cover_Rock2" type="StaticBody2D" parent="."]
+position = Vector2(450, 180)
+
+[node name="Sprite2D" type="Sprite2D" parent="Cover_Rock2"]
+texture = SubResource("CoverAtlas_3")
+scale = Vector2(1.5, 1.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cover_Rock2"]
+shape = SubResource("CoverShape_3")
+
+[node name="Shadow" type="ColorRect" parent="Cover_Rock2"]
+offset_left = -50.0
+offset_top = 28.0
+offset_right = 50.0
+offset_bottom = 36.0
+z_index = -1
+color = Color(0, 0, 0, 0.3)
+
+[node name="FountainShadow" type="Sprite2D" parent="."]
+position = Vector2(604, 336)
+scale = Vector2(1.5, 1.5)
+z_index = -2
+texture = ExtResource("fountain_sh_tex")
+
+[node name="Fountain" type="Sprite2D" parent="."]
+position = Vector2(600, 330)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("fountain_tex")
+
+[node name="FountainLight" type="PointLight2D" parent="."]
+position = Vector2(600, 330)
+color = Color(0.5, 0.7, 1, 1)
+energy = 0.3
+texture = SubResource("LightTex_1")
+texture_scale = 3.0
+
+[node name="FoodogShadow_L" type="Sprite2D" parent="."]
+position = Vector2(443, 344)
+scale = Vector2(1.5, 1.5)
+z_index = -2
+texture = ExtResource("foodog_sh_tex")
+
+[node name="Foodog_L" type="Sprite2D" parent="."]
+position = Vector2(440, 340)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("foodog_tex")
+
+[node name="FoodogShadow_R" type="Sprite2D" parent="."]
+position = Vector2(763, 344)
+scale = Vector2(1.5, 1.5)
+z_index = -2
+texture = ExtResource("foodog_sh_tex")
+
+[node name="Foodog_R" type="Sprite2D" parent="."]
+position = Vector2(760, 340)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("foodog_tex")
+flip_h = true
+
+[node name="Tree_0" type="Sprite2D" parent="."]
+position = Vector2(60, 60)
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.7, 0.8, 0.7, 1)
+z_index = 1
+texture = SubResource("TreeAtlas_1")
+
+[node name="Tree_1" type="Sprite2D" parent="."]
+position = Vector2(60, 700)
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.7, 0.8, 0.7, 1)
+z_index = 1
+texture = SubResource("TreeAtlas_2")
+
+[node name="Tree_2" type="Sprite2D" parent="."]
+position = Vector2(1140, 60)
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.7, 0.8, 0.7, 1)
+z_index = 1
+texture = SubResource("TreeAtlas_3")
+
+[node name="Tree_3" type="Sprite2D" parent="."]
+position = Vector2(1140, 700)
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.7, 0.8, 0.7, 1)
+z_index = 1
+texture = SubResource("TreeAtlas_4")
+
+[node name="Tree_4" type="Sprite2D" parent="."]
+position = Vector2(600, -200)
+scale = Vector2(1.5, 1.5)
+modulate = Color(0.7, 0.8, 0.7, 1)
+z_index = 1
+texture = SubResource("TreeAtlas_5")
+
+[node name="ParkedCar" type="Sprite2D" parent="."]
+position = Vector2(70, 420)
+modulate = Color(0.5, 0.55, 0.65, 0.7)
+z_index = -3
+texture = ExtResource("car_tex")
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+script = ExtResource("nav_script")
+
+[node name="VeilModulate" type="CanvasModulate" parent="."]
+color = Color(0.55, 0.6, 0.75, 1)
+
+[node name="VeilParticles" type="CPUParticles2D" parent="."]
+position = Vector2(600, 350)
+z_index = 10
+amount = 40
+lifetime = 6.0
+emission_shape = 2
+emission_rect_extents = Vector2(600, 400)
+direction = Vector2(0.3, -1)
+spread = 30.0
+gravity = Vector2(0, 5)
+initial_velocity_min = 8.0
+initial_velocity_max = 20.0
+scale_amount_min = 1.0
+scale_amount_max = 3.0
+color = Color(0.8, 0.6, 0.4, 0.3)
+
+[node name="TurnManager" type="Node" parent="."]
+script = ExtResource("tm_script")
+
+[node name="EngagementManager" type="Node" parent="."]
+script = ExtResource("em_script")
+
+[node name="TacticalCursor" type="Node2D" parent="."]
+position = Vector2(550, 580)
+script = ExtResource("tc_script")
+
+[node name="Kage" parent="." instance=ExtResource("kage_scene")]
+position = Vector2(550, 580)
+
+[node name="Akari" parent="." instance=ExtResource("akari_scene")]
+position = Vector2(650, 620)
+
+[node name="SmallDemon_0" parent="." instance=ExtResource("demon_scene")]
+position = Vector2(600, 80)
+
+[node name="SmallDemon_1" parent="." instance=ExtResource("demon_scene")]
+position = Vector2(100, 380)
+
+[node name="SmallDemon_2" parent="." instance=ExtResource("demon_scene")]
+position = Vector2(1100, 380)
+
+[node name="BigDemon" parent="." instance=ExtResource("boss_scene")]
+position = Vector2(600, -80)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(550, 550)
+script = ExtResource("cam_script")
+
+[node name="PartyManager" type="Node" parent="."]
+script = ExtResource("pm_script")
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("ui_script")
+
+[node name="HelpLabel" type="Label" parent="UI"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 800.0
+offset_bottom = 50.0
+text = "2D PROTOTYPE \u2014 Tactical: WASD cursor, Space move, Tab switch, Q aim, E end turn\nARPG: WASD move, J attack (3-hit combo), K dodge (i-frames), L parry"
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_font_sizes/font_size = 14
+
+[node name="PhaseLabel" type="Label" parent="UI"]
+offset_left = 10.0
+offset_top = 55.0
+offset_right = 300.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="HPLabel" type="Label" parent="UI"]
+offset_left = 10.0
+offset_top = 80.0
+offset_right = 400.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="EngLabel" type="Label" parent="UI"]
+offset_left = 10.0
+offset_top = 105.0
+offset_right = 500.0
+offset_bottom = 125.0
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 14
