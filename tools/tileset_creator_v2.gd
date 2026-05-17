@@ -48,7 +48,7 @@ var PINNED: Dictionary = {
 ## Useful if a sheet happens to have dimensions divisible by 32 but is
 ## actually 16px art.
 var FORCE_16PX_DIRS: Array[String] = [
-	"res://sprites/tilesets/limezu/",
+	# "res://sprites/tilesets/limezu/",  # Commented out — LimeZu ships native 32px
 ]
 
 @export_tool_button("Create TileSet") var _btn = _create_tileset
