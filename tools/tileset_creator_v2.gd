@@ -338,19 +338,20 @@ func _has_pixels(img: Image, gx: int, gy: int, tile_size: int) -> bool:
 	var edge := tile_size - 1
 
 	# Sample center + corners first (fast reject)
-	for s in [Vector2i(half, half), Vector2i(0, 0), Vector2i(edge, edge),
-	          Vector2i(0, edge), Vector2i(edge, 0)]:
-		var px := x0 + s.x
-		var py := y0 + s.y
-		if px < img.get_width() and py < img.get_height():
-			if img.get_pixel(px, py).a > 0.01:
+	var samples: Array[Vector2i] = [Vector2i(half, half), Vector2i(0, 0), Vector2i(edge, edge),
+	          Vector2i(0, edge), Vector2i(edge, 0)]
+	for s: Vector2i in samples:
+		var spx: int = x0 + s.x
+		var spy: int = y0 + s.y
+		if spx < img.get_width() and spy < img.get_height():
+			if img.get_pixel(spx, spy).a > 0.01:
 				return true
 
 	# Full scan for edge-case tiles
-	for py in range(tile_size):
-		for px in range(tile_size):
-			var ax := x0 + px
-			var ay := y0 + py
+	for py: int in range(tile_size):
+		for px: int in range(tile_size):
+			var ax: int = x0 + px
+			var ay: int = y0 + py
 			if ax < img.get_width() and ay < img.get_height():
 				if img.get_pixel(ax, ay).a > 0.01:
 					return true
