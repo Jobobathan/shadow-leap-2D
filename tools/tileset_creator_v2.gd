@@ -1,8 +1,8 @@
 @tool
 extends Node2D
-## ═══════════════════════════════════════════════════════════════
-## TileSet Creator v2 — Auto-scanning, Auto-upscaling
-## ═══════════════════════════════════════════════════════════════
+## ===============================================================
+## TileSet Creator v2 -- Auto-scanning, Auto-upscaling
+## ===============================================================
 ## Scans tileset directories for PNGs, auto-detects 16px sheets
 ## and upscales them to 32px with nearest-neighbor. Creates a
 ## single TileSet resource with all sources registered.
@@ -15,16 +15,16 @@ extends Node2D
 ##   5. Add TileMapLayers, assign the TileSet, paint!
 ##
 ## Supports:
-##   - 32×32 native tilesets (used as-is)
-##   - 16×16 tilesets (auto-upscaled 2× nearest-neighbor)
+##   - 32x32 native tilesets (used as-is)
+##   - 16x16 tilesets (auto-upscaled 2x nearest-neighbor)
 ##   - Mixed directories (each PNG detected individually)
-## ═══════════════════════════════════════════════════════════════
+## ===============================================================
 
 const TILE := 32
 const TILESET_PATH := "res://resources/city_tileset.tres"
 const UPSCALE_DIR := "res://sprites/tilesets/limezu/upscaled_32px/"
 
-## ─── SCAN DIRECTORIES ───────────────────────────────────────
+## --- SCAN DIRECTORIES ---------------------------------------
 ## Every PNG found in these dirs gets registered as an atlas source.
 ## Add more directories as you buy more packs.
 var SCAN_DIRS: Array[String] = [
@@ -35,7 +35,7 @@ var SCAN_DIRS: Array[String] = [
 	# "res://sprites/tilesets/desert/",
 ]
 
-## ─── EXPLICIT SOURCES (optional) ────────────────────────────
+## --- EXPLICIT SOURCES (optional) ----------------------------
 ## Pin specific files to specific source IDs if you want stable IDs.
 ## These are registered FIRST, then scanned files fill remaining slots.
 ## Set to {} to skip and let everything auto-assign.
@@ -43,12 +43,12 @@ var PINNED: Dictionary = {
 	# Example: 0: "res://sprites/tilesets/limezu/modern_exteriors.png",
 }
 
-## ─── FORCE 16px MODE ────────────────────────────────────────
+## --- FORCE 16px MODE ----------------------------------------
 ## Directories listed here are ALWAYS treated as 16px (skip detection).
 ## Useful if a sheet happens to have dimensions divisible by 32 but is
 ## actually 16px art.
 var FORCE_16PX_DIRS: Array[String] = [
-	# "res://sprites/tilesets/limezu/",  # Commented out — LimeZu ships native 32px
+	# "res://sprites/tilesets/limezu/",  # Commented out -- LimeZu ships native 32px
 ]
 
 @export_tool_button("Create TileSet") var _btn = _create_tileset
@@ -65,14 +65,14 @@ func _dry_run() -> void:
 
 func _run(dry: bool) -> void:
 	var label := "DRY RUN" if dry else "Creating TileSet"
-	print("\n[TileSetCreator v2] ═══ %s ═══" % label)
+	print("\n[TileSetCreator v2] === %s ===" % label)
 
 	# Ensure upscale output dir exists
 	if not dry:
 		DirAccess.make_dir_recursive_absolute(
 			ProjectSettings.globalize_path(UPSCALE_DIR))
 
-	# ── Collect all PNGs ──
+	# -- Collect all PNGs --
 	var all_files: Array[Dictionary] = []  # [{path, is_16px, source_path}]
 
 	# Pinned sources first
@@ -108,10 +108,10 @@ func _run(dry: bool) -> void:
 		print("  Drop your tileset PNGs into one of those folders.")
 		return
 
-	# ── Report ──
+	# -- Report --
 	print("\n  Found %d tileset(s):" % all_files.size())
 	for info in all_files:
-		var scale_tag := " [16px → 32px]" if info["is_16px"] else " [32px native]"
+		var scale_tag := " [16px -> 32px]" if info["is_16px"] else " [32px native]"
 		print("    %s%s (%dx%d)" % [
 			info["original"].get_file(), scale_tag,
 			info["width"], info["height"]])
@@ -120,19 +120,19 @@ func _run(dry: bool) -> void:
 		print("\n  [DRY RUN] No files written. Run 'Create TileSet' to build.")
 		return
 
-	# ── Upscale 16px sheets ──
+	# -- Upscale 16px sheets --
 	for info in all_files:
 		if info["is_16px"]:
 			var out_path := _upscale_png(info["original"])
 			if out_path != "":
 				info["use_path"] = out_path
 			else:
-				push_warning("  ⚠ Upscale failed for %s, using original" % info["original"])
+				push_warning("  !! Upscale failed for %s, using original" % info["original"])
 				info["use_path"] = info["original"]
 		else:
 			info["use_path"] = info["original"]
 
-	# ── Build TileSet ──
+	# -- Build TileSet --
 	var ts := TileSet.new()
 	ts.tile_size = Vector2i(TILE, TILE)
 
@@ -167,10 +167,10 @@ func _run(dry: bool) -> void:
 		var tex = load(use_path)
 		if not tex:
 			# If upscaled file isn't imported yet, try the original
-			push_warning("  ⚠ Can't load %s — Godot may need to reimport. Trying original..." % use_path)
+			push_warning("  !! Can't load %s -- Godot may need to reimport. Trying original..." % use_path)
 			tex = load(info["original"])
 			if not tex:
-				push_warning("  ⚠ Skipping %s — can't load texture" % info["original"])
+				push_warning("  !! Skipping %s -- can't load texture" % info["original"])
 				continue
 			# If using original 16px, set region size to 16
 			var src16 := TileSetAtlasSource.new()
@@ -181,8 +181,8 @@ func _run(dry: bool) -> void:
 			var n := _register_tiles_sized(src16, info["original"], 16)
 			ts.add_source(src16, src_id)
 			total_tiles += n
-			var tag := " [16px — upscaled file needs reimport, using original]"
-			print("  [%2d] %s → %d tiles%s" % [src_id, info["original"].get_file(), n, tag])
+			var tag := " [16px -- upscaled file needs reimport, using original]"
+			print("  [%2d] %s -> %d tiles%s" % [src_id, info["original"].get_file(), n, tag])
 			continue
 
 		var src := TileSetAtlasSource.new()
@@ -194,26 +194,26 @@ func _run(dry: bool) -> void:
 		total_tiles += n
 
 		var scale_tag := " [upscaled]" if info["is_16px"] else ""
-		print("  [%2d] %s → %d tiles%s" % [src_id, use_path.get_file(), n, scale_tag])
+		print("  [%2d] %s -> %d tiles%s" % [src_id, use_path.get_file(), n, scale_tag])
 
 	# Save
 	var err := ResourceSaver.save(ts, TILESET_PATH)
 	if err == OK:
-		print("\n  ✓ Saved %s (%d total tiles across %d sources)" % [
+		print("\n  OK Saved %s (%d total tiles across %d sources)" % [
 			TILESET_PATH, total_tiles, all_files.size()])
-		print("  → Add TileMapLayers, assign this TileSet, and paint!")
+		print("  -> Add TileMapLayers, assign this TileSet, and paint!")
 	else:
-		push_error("  ✗ Save failed: %s" % error_string(err))
+		push_error("  FAIL Save failed: %s" % error_string(err))
 
 
-## ─── HELPERS ────────────────────────────────────────────────
+## --- HELPERS ------------------------------------------------
 
 func _scan_dir_for_pngs(dir_path: String) -> Array[String]:
 	"""Recursively find all .png files in a directory."""
 	var results: Array[String] = []
 	var dir := DirAccess.open(dir_path)
 	if not dir:
-		print("  ⚠ Can't open directory: %s" % dir_path)
+		print("  !! Can't open directory: %s" % dir_path)
 		return results
 
 	dir.list_dir_begin()
@@ -234,12 +234,12 @@ func _analyze_png(path: String) -> Dictionary:
 	"""Load a PNG and determine if it's 16px or 32px."""
 	var tex = load(path) as Texture2D
 	if not tex:
-		push_warning("  ⚠ Could not load: %s" % path)
+		push_warning("  !! Could not load: %s" % path)
 		return {}
 
 	var img: Image = tex.get_image()
 	if not img:
-		push_warning("  ⚠ get_image() null: %s" % path)
+		push_warning("  !! get_image() null: %s" % path)
 		return {}
 
 	var w := img.get_width()
@@ -283,7 +283,7 @@ func _upscale_png(source_path: String) -> String:
 	if img.is_compressed():
 		img.decompress()
 
-	# Nearest-neighbor 2× upscale
+	# Nearest-neighbor 2x upscale
 	var new_w := img.get_width() * 2
 	var new_h := img.get_height() * 2
 	img.resize(new_w, new_h, Image.INTERPOLATE_NEAREST)
@@ -295,11 +295,11 @@ func _upscale_png(source_path: String) -> String:
 
 	var err := img.save_png(global_path)
 	if err == OK:
-		print("    ↑ Upscaled %s → %s (%dx%d)" % [
+		print("    UP Upscaled %s -> %s (%dx%d)" % [
 			source_path.get_file(), out_name, new_w, new_h])
 		return out_path
 	else:
-		push_error("    ✗ Failed to save upscaled: %s" % error_string(err))
+		push_error("    FAIL Failed to save upscaled: %s" % error_string(err))
 		return ""
 
 
