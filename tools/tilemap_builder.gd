@@ -26,26 +26,27 @@ const SRC_ROOFS := 1
 # Pattern: TL(+0,+0) Top(+1,+0) TR(+2,+0)
 #          L (+0,+1) Fill(+1,+1) R (+2,+1)
 #          BL(+0,+2) Bot(+1,+2) BR(+2,+2)
-const TERRAINS = {
+# NOTE: Using var (not const) because const dicts with Vector2i() can fail in @tool
+var TERRAINS := {
 	"brick_red":   Vector2i(0, 0),
 	"brick_white": Vector2i(0, 5),
 	"wood_blue":   Vector2i(25, 1),
 	"wood_green":  Vector2i(25, 8),
 }
 
-const WINDOWS = {
+var WINDOWS := {
 	"brick_dark":  Vector2i(8, 14),
 	"brick_light": Vector2i(0, 14),
 	"wood_dark":   Vector2i(21, 18),
 }
 
-const DOORS = {
+var DOORS := {
 	"red_brick": Vector2i(4, 11),
 	"dark":      Vector2i(24, 15),
 	"darkest":   Vector2i(30, 17),
 }
 
-const DOOR_FRAMES = {
+var DOOR_FRAMES := {
 	"red_brick": Vector2i(4, 10),
 	"dark":      Vector2i(24, 14),
 	"darkest":   Vector2i(30, 16),
@@ -57,24 +58,11 @@ const V_DARK2 = 35  # blue-gray
 
 
 # ─── Inspector triggers ───────────────────────────────────
+# Using @export_tool_button (Godot 4.4+) — shows clickable buttons in inspector
 
-@export var build_tileset: bool = false:
-	set(v):
-		if v and Engine.is_editor_hint():
-			_build_tileset()
-		build_tileset = false
-
-@export var build_level: bool = false:
-	set(v):
-		if v and Engine.is_editor_hint():
-			_build_level()
-		build_level = false
-
-@export var cleanup_legacy: bool = false:
-	set(v):
-		if v and Engine.is_editor_hint():
-			_cleanup_legacy()
-		cleanup_legacy = false
+@export_tool_button("1. Build TileSet") var _btn_tileset = _build_tileset
+@export_tool_button("2. Build Level") var _btn_level = _build_level
+@export_tool_button("3. Cleanup Legacy") var _btn_cleanup = _cleanup_legacy
 
 
 # ═══════════════════════════════════════════════════════════
