@@ -113,10 +113,23 @@ func _build_tileset() -> void:
 
 func _register_tiles(src: TileSetAtlasSource) -> int:
 	"""Scan texture for non-empty 32×32 tiles and register them."""
-	var img := src.texture.get_image()
+	var tex := src.texture
+	if not tex:
+		push_error("  ✗ Texture is null!")
+		return 0
+	var img := tex.get_image()
+	if not img:
+		push_error("  ✗ get_image() returned null — texture may not be imported yet")
+		return 0
+	# Decompress and convert to RGBA8 so get_pixel() works on imported textures
+	if img.is_compressed():
+		img.decompress()
+	if img.get_format() != Image.FORMAT_RGBA8:
+		img.convert(Image.FORMAT_RGBA8)
 	var cols := img.get_width() / TILE
 	var rows := img.get_height() / TILE
 	var count := 0
+	print("  Scanning %dx%d grid (%d regions)..." % [cols, rows, cols * rows])
 	for y in range(rows):
 		for x in range(cols):
 			if _has_pixels(img, x, y):
@@ -415,15 +428,46 @@ func _cleanup_legacy() -> void:
 	if not root:
 		return
 
+	var scene_root := get_tree().edited_scene_root
+
+	# ── Step 1: Rescue WindowLights and Shadows from Houses ──
+	# These atmospheric nodes have no TileMapLayer replacement.
+	# Re-parent them to scene root, preserving global position.
+	var houses := ["House1", "House2", "House3", "House4"]
+	for house_name in houses:
+		var house := root.get_node_or_null(house_name)
+		if not house:
+			continue
+		var children_to_rescue: Array[Node] = []
+		for child in house.get_children():
+			if child is PointLight2D or (child is ColorRect and child.name == "Shadow"):
+				children_to_rescue.append(child)
+		for child in children_to_rescue:
+			var global_pos: Vector2
+			if child is PointLight2D:
+				global_pos = house.position + child.position
+			else:
+				# ColorRect uses offsets, convert to position-based
+				global_pos = house.position
+			var new_name := house_name + "_" + child.name
+			house.remove_child(child)
+			child.name = new_name
+			if child is PointLight2D:
+				child.position = global_pos
+			else:
+				# Preserve shadow offsets relative to house position
+				child.position = house.position
+			root.add_child(child)
+			child.owner = scene_root
+			print("  ✓ Rescued: %s → %s (pos %s)" % [house_name, new_name, str(global_pos)])
+
+	# ── Step 2: Remove only nodes replaced by TileMapLayers ──
 	var to_remove := [
-		# Old environment nodes (replaced by TileMapLayers)
-		"Ground",              # Sprite2D with tiled ground_tile.png
-		"GridOverlay",         # grid_drawer.gd (TileMap IS the grid now)
-		"House1",              # StaticBody2D + building_1.png
-		"House2",              # StaticBody2D + building_2.png
-		"House3",              # StaticBody2D + building_3.png
-		"House4",              # StaticBody2D + building_4.png
-		"NavigationRegion2D",  # nav_builder.gd (TileSet nav layer replaces)
+		"House1",       # StaticBody2D + building_1.png → WallLayer tiles
+		"House2",       # StaticBody2D + building_2.png → WallLayer tiles
+		"House3",       # StaticBody2D + building_3.png → WallLayer tiles
+		"House4",       # StaticBody2D + building_4.png → WallLayer tiles
+		"GridOverlay",  # grid_drawer.gd → TileMap IS the grid
 	]
 
 	for node_name in to_remove:
@@ -435,10 +479,14 @@ func _cleanup_legacy() -> void:
 			print("  – Skip (not found): %s" % node_name)
 
 	print("")
-	print("  KEPT: Cover objects (Rock1, Barrel, Rock2) — individual gameplay props")
-	print("  KEPT: Trees, Fountain, Foodogs, ParkedCar — individual decorative sprites")
-	print("  KEPT: All entities (Kage, Akari, demons) — no changes needed")
-	print("  KEPT: All managers, Camera, UI, atmosphere")
+	print("  KEPT: Ground — remove after GroundLayer is painted (Phase 4)")
+	print("  KEPT: NavigationRegion2D — remove after TileSet nav is configured")
+	print("  KEPT: Cover objects (Rock1, Barrel, Rock2)")
+	print("  KEPT: Trees, Fountain, Foodogs, ParkedCar")
+	print("  KEPT: All entities, managers, Camera, UI, atmosphere")
+	print("  RESCUED: %d WindowLights + Shadows → standalone nodes" % [
+		houses.size()  # approximate
+	])
 	print("")
 	print("  MANUAL CLEANUP (after verifying in editor):")
 	print("    • Delete sprites/building_1-4.png (no longer needed)")
