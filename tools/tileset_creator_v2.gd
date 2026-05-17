@@ -16,7 +16,7 @@ extends Node2D
 ##   5. Add TileMapLayers, assign the TileSet, paint!
 ## ===============================================================
 
-const TILE := 32
+const TILE := 48
 const TILESET_PATH := "res://resources/city_tileset.tres"
 
 ## Minimum PNG dimensions to process (skip individual tiles)
