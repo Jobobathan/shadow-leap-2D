@@ -232,12 +232,12 @@ func _scan_dir_for_pngs(dir_path: String) -> Array[String]:
 
 func _analyze_png(path: String) -> Dictionary:
 	"""Load a PNG and determine if it's 16px or 32px."""
-	var tex = load(path)
+	var tex = load(path) as Texture2D
 	if not tex:
 		push_warning("  ⚠ Could not load: %s" % path)
 		return {}
 
-	var img := tex.get_image()
+	var img: Image = tex.get_image()
 	if not img:
 		push_warning("  ⚠ get_image() null: %s" % path)
 		return {}
@@ -272,11 +272,11 @@ func _analyze_png(path: String) -> Dictionary:
 
 func _upscale_png(source_path: String) -> String:
 	"""Upscale a 16px PNG to 32px with nearest-neighbor. Returns output path."""
-	var tex = load(source_path)
+	var tex = load(source_path) as Texture2D
 	if not tex:
 		return ""
 
-	var img := tex.get_image()
+	var img: Image = tex.get_image()
 	if not img:
 		return ""
 
